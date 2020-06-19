@@ -72,7 +72,6 @@ public class AddTaskActivity extends AppCompatActivity {
 //                    String taskText = textInputList.getText().toString();
                     if(!taskText.isEmpty()) {
                         // creating Object Task from input
-
                         task.setTaskText(textInputList.getText().toString());
 
                         // save text using Task Data Access Object and using return to show info to user
