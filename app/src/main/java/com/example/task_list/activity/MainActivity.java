@@ -1,12 +1,15 @@
 package com.example.task_list.activity;
 
-import android.content.ContentValues;
+import android.app.AlertDialog;
+
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.example.task_list.R;
 import com.example.task_list.helper.DAO.TaskDAO;
@@ -29,11 +32,16 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     Toolbar toolbar;
     private ArrayList<Task> taskList = new ArrayList<>();
+    TaskDAO tDao;
+    Task selectedTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // task Data Access Object to control database
+         tDao = new TaskDAO(getApplicationContext());
 
         // toolbar
         toolbar = findViewById(R.id.toolbar);
@@ -77,7 +85,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loadTaskData() {
-        TaskDAO tDao = new TaskDAO(getApplicationContext());
         taskList = tDao.list();
     }
 
@@ -92,12 +99,44 @@ public class MainActivity extends AppCompatActivity {
                         new RecyclerItemClickListener.OnItemClickListener() {
                             @Override
                             public void onItemClick(View view, int position) {
-                                Log.d(TAG, "onItemClick: ");
+                                Log.e(TAG, "onItemClick: ");
+                                // recover data to edit
+                                selectedTask = taskList.get(position);
+
+                                // send data to next acitivity
+                                Intent intent = new Intent(getApplicationContext(), AddTaskActivity.class);
+                                intent.putExtra("selectedTask", selectedTask);
+                                startActivity(intent);
                             }
 
                             @Override
                             public void onLongItemClick(View view, int position) {
-                                Log.d(TAG, "onLongItemClick: ");
+                                // recover data to delete
+                                selectedTask = taskList.get(position);
+
+                                AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+                                //dialog config
+                                dialog.setTitle("Confirm Delete");
+                                dialog.setMessage("Do you really want's to delete: " + selectedTask.getTaskText() + " ?");
+                                dialog.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        if(tDao.delete(selectedTask)) {
+                                            // recall loadTaskList to update RecyclerView
+                                            loadTaskList();
+                                            Toast.makeText(getApplicationContext(),
+                                                "Task deleted!",
+                                                    Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            Toast.makeText(getApplicationContext(),
+                                                    "Error to delete task :(",
+                                                    Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                });
+                                dialog.setNegativeButton("No", null);
+                                dialog.create();
+                                dialog.show();
                             }
 
                             @Override

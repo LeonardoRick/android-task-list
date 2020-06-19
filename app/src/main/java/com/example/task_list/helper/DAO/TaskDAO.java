@@ -32,7 +32,7 @@ public class TaskDAO implements ITaskDAO {
         ContentValues cv = new ContentValues();
         cv.put(LocalDbHelper.KEY_TEXT, task.getTaskText());
         try {
-            write.insert(LocalDbHelper.TABLE_NAME, null /*only save if task is filled*/, cv);
+            write.insert(LocalDbHelper.TABLE_NAME, null /*non default value if empty*/, cv);
             Log.i(TAG, "save: sucesss");
         } catch (Exception e) {
             Log.e(TAG, "error to save task -" + e.getMessage());
@@ -43,12 +43,37 @@ public class TaskDAO implements ITaskDAO {
 
     @Override
     public boolean update(Task task) {
-        return false;
+        try {
+            ContentValues cv = new ContentValues();
+            cv.put(LocalDbHelper.KEY_TEXT, task.getTaskText());
+
+            String[] args = { task.getId().toString() };
+            write.update(LocalDbHelper.TABLE_NAME, cv,
+                    "id=?" /*where clause*/,
+                    args /* variables that will fill the "?" marks on where clause*/
+            );
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+            return false;
+        }
+        return true;
     }
 
     @Override
     public boolean delete(Task task) {
-        return false;
+        String[] args = {task.getId().toString()};
+        try {
+            ContentValues cv = new ContentValues();
+            write.delete(
+                    LocalDbHelper.TABLE_NAME,
+                    "id=?" /*where clause*/,
+                    args /* variables that will fill the "?" marks on where clause*/
+            );
+        } catch (Exception e) {
+            Log.e(TAG, e.getMessage());
+            return false;
+        }
+        return true;
     }
 
     @Override
